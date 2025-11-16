@@ -19,7 +19,7 @@
 namespace conio {
 
 // Colour constants
-enum class Color {
+enum class Colour {
     BLACK = 0,
     BLUE = 1,
     GREEN = 2,
@@ -138,7 +138,7 @@ inline void clrscr() {
 }
 
 // Set text colour
-inline void textcolor(Color fg) {
+inline void textcolor(Colour fg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -157,7 +157,7 @@ inline void textcolor(Color fg) {
 }
 
 // Set background colour
-inline void textbackground(Color bg) {
+inline void textbackground(Colour bg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -174,7 +174,7 @@ inline void textbackground(Color bg) {
 }
 
 // Set both foreground and background colours
-inline void textattr(Color fg, Color bg) {
+inline void textattr(Colour fg, Colour bg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     WORD attrs = static_cast<WORD>(fg) | (static_cast<WORD>(bg) << 4);
@@ -222,14 +222,14 @@ inline void putch(int x, int y, char c) {
 }
 
 // Print character at specified position with colour
-inline void putch(int x, int y, char c, Color fg, Color bg) {
+inline void putch(int x, int y, char c, Colour fg, Colour bg) {
     gotoxy(x, y);
     textattr(fg, bg);
     putch(c);
 }
 
 // Print character at specified position with foreground colour
-inline void putch(int x, int y, char c, Color fg) {
+inline void putch(int x, int y, char c, Colour fg) {
     gotoxy(x, y);
     textcolor(fg);
     putch(c);
@@ -311,7 +311,7 @@ inline void printf(int x, int y, const char* format, ...) {
 }
 
 // Printf at specified position with colour
-inline void printf(int x, int y, Color fg, Color bg, const char* format, ...) {
+inline void printf(int x, int y, Colour fg, Colour bg, const char* format, ...) {
     gotoxy(x, y);
     textattr(fg, bg);
     
@@ -331,7 +331,7 @@ inline void printf(int x, int y, Color fg, Color bg, const char* format, ...) {
 }
 
 // Printf at specified position with foreground colour
-inline void printf(int x, int y, Color fg, const char* format, ...) {
+inline void printf(int x, int y, Colour fg, const char* format, ...) {
     gotoxy(x, y);
     textcolor(fg);
     

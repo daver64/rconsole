@@ -13,7 +13,7 @@ int main() {
     conio::showcursor(false);
     
     // Display title
-    conio::textattr(conio::Color::BRIGHT_YELLOW, conio::Color::BLUE);
+    conio::textattr(conio::Colour::BRIGHT_YELLOW, conio::Colour::BLUE);
     conio::gotoxy(0, 0);
     conio::printf("                    CONIO Library Demo                    ");
     conio::resetattr();
@@ -24,24 +24,24 @@ int main() {
     
     // Coloured text
     conio::gotoxy(2, 4);
-    conio::textcolor(conio::Color::GREEN);
+    conio::textcolor(conio::Colour::GREEN);
     conio::printf("2. Green coloured text");
     
     conio::gotoxy(2, 5);
-    conio::textcolor(conio::Color::RED);
+    conio::textcolor(conio::Colour::RED);
     conio::printf("3. Red coloured text");
     
     conio::gotoxy(2, 6);
-    conio::textcolor(conio::Color::BRIGHT_CYAN);
+    conio::textcolor(conio::Colour::BRIGHT_CYAN);
     conio::printf("4. Bright cyan coloured text");
     
     conio::resetattr();
     
     // Printf with position and colour
-    conio::printf(2, 8, conio::Color::BRIGHT_MAGENTA, "5. Printf with x, y, and colour parameters");;
+    conio::printf(2, 8, conio::Colour::BRIGHT_MAGENTA, "5. Printf with x, y, and colour parameters");;
     
     // Printf with position, foreground and background colour
-    conio::printf(2, 9, conio::Color::YELLOW, conio::Color::RED, "6. Text with yellow fg and red bg");
+    conio::printf(2, 9, conio::Colour::YELLOW, conio::Colour::RED, "6. Text with yellow fg and red bg");
     
     conio::resetattr();
     
@@ -59,18 +59,18 @@ int main() {
     int x_start = 2;
     int y_pos = 14;
     
-    conio::putch(x_start, y_pos, '*', conio::Color::RED);
-    conio::putch(x_start + 2, y_pos, '*', conio::Color::GREEN);
-    conio::putch(x_start + 4, y_pos, '*', conio::Color::BLUE);
-    conio::putch(x_start + 6, y_pos, '*', conio::Color::YELLOW);
-    conio::putch(x_start + 8, y_pos, '*', conio::Color::MAGENTA);
-    conio::putch(x_start + 10, y_pos, '*', conio::Color::CYAN);
-    conio::putch(x_start + 12, y_pos, '*', conio::Color::WHITE);
+    conio::putch(x_start, y_pos, '*', conio::Colour::RED);
+    conio::putch(x_start + 2, y_pos, '*', conio::Colour::GREEN);
+    conio::putch(x_start + 4, y_pos, '*', conio::Colour::BLUE);
+    conio::putch(x_start + 6, y_pos, '*', conio::Colour::YELLOW);
+    conio::putch(x_start + 8, y_pos, '*', conio::Colour::MAGENTA);
+    conio::putch(x_start + 10, y_pos, '*', conio::Colour::CYAN);
+    conio::putch(x_start + 12, y_pos, '*', conio::Colour::WHITE);
     
-    conio::putch(x_start + 14, y_pos, '#', conio::Color::BRIGHT_RED, conio::Color::BLACK);
-    conio::putch(x_start + 16, y_pos, '#', conio::Color::BRIGHT_GREEN, conio::Color::BLACK);
-    conio::putch(x_start + 18, y_pos, '#', conio::Color::BRIGHT_BLUE, conio::Color::BLACK);
-    conio::putch(x_start + 20, y_pos, '#', conio::Color::BRIGHT_YELLOW, conio::Color::BLACK);
+    conio::putch(x_start + 14, y_pos, '#', conio::Colour::BRIGHT_RED, conio::Colour::BLACK);
+    conio::putch(x_start + 16, y_pos, '#', conio::Colour::BRIGHT_GREEN, conio::Colour::BLACK);
+    conio::putch(x_start + 18, y_pos, '#', conio::Colour::BRIGHT_BLUE, conio::Colour::BLACK);
+    conio::putch(x_start + 20, y_pos, '#', conio::Colour::BRIGHT_YELLOW, conio::Colour::BLACK);
     
     // Drawing a box
     conio::resetattr();
@@ -82,7 +82,7 @@ int main() {
     int box_width = 40;
     int box_height = 5;
     
-    conio::textcolor(conio::Color::BRIGHT_WHITE);
+    conio::textcolor(conio::Colour::BRIGHT_WHITE);
     
     // Top and bottom borders
     for (int x = box_x; x < box_x + box_width; x++) {
@@ -103,7 +103,7 @@ int main() {
     conio::putch(box_x + box_width - 1, box_y + box_height - 1, '+');
     
     // Text inside box
-    conio::printf(box_x + 8, box_y + 2, conio::Color::BRIGHT_GREEN, "Console I/O is awesome!");
+    conio::printf(box_x + 8, box_y + 2, conio::Colour::BRIGHT_GREEN, "Console I/O is awesome!");
     
     conio::resetattr();
     
@@ -115,7 +115,7 @@ int main() {
     
     // Animated demonstration
     conio::gotoxy(2, 25);
-    conio::textcolor(conio::Color::BRIGHT_YELLOW);
+    conio::textcolor(conio::Colour::BRIGHT_YELLOW);
     conio::printf("11. Animated bouncing ball (5 seconds)...");
     conio::resetattr();
     
@@ -146,7 +146,7 @@ int main() {
         if (ball_y <= 26 || ball_y >= max_y) dy = -dy;
         
         // Draw ball
-        conio::putch(ball_x, ball_y, 'O', conio::Color::BRIGHT_RED);
+        conio::putch(ball_x, ball_y, 'O', conio::Colour::BRIGHT_RED);
         
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -157,7 +157,7 @@ int main() {
     // Final message
     conio::showcursor(true);
     conio::gotoxy(2, height - 2);
-    conio::textcolor(conio::Color::BRIGHT_WHITE);
+    conio::textcolor(conio::Colour::BRIGHT_WHITE);
     conio::printf("Press any key to exit...");
     conio::resetattr();
     

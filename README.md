@@ -54,12 +54,12 @@ int main() {
     conio::printf("Hello, World!");
     
     // Print with colour
-    conio::textcolor(conio::Color::BRIGHT_GREEN);
+    conio::textcolor(conio::Colour::BRIGHT_GREEN);
     conio::gotoxy(10, 7);
     conio::printf("This is green text!");
     
     // Print at position with colour in one call
-    conio::printf(10, 9, conio::Color::RED, "This is red text!");
+    conio::printf(10, 9, conio::Colour::RED, "This is red text!");
     
     // Wait for keypress
     conio::getchar();
@@ -143,17 +143,17 @@ Returns the console height in characters.
 ### Colour Control
 
 ```cpp
-void conio::textcolor(Color fg)
+void conio::textcolor(Colour fg)
 ```
 Sets the foreground (text) colour.
 
 ```cpp
-void conio::textbackground(Color bg)
+void conio::textbackground(Colour bg)
 ```
 Sets the background colour.
 
 ```cpp
-void conio::textattr(Color fg, Color bg)
+void conio::textattr(Colour fg, Colour bg)
 ```
 Sets both foreground and background colours.
 
@@ -164,22 +164,22 @@ Resets text attributes to default.
 
 #### Available Colours
 
-- `Color::BLACK`
-- `Color::BLUE`
-- `Color::GREEN`
-- `Color::CYAN`
-- `Color::RED`
-- `Color::MAGENTA`
-- `Color::YELLOW`
-- `Color::WHITE`
-- `Color::BRIGHT_BLACK`
-- `Color::BRIGHT_BLUE`
-- `Color::BRIGHT_GREEN`
-- `Color::BRIGHT_CYAN`
-- `Color::BRIGHT_RED`
-- `Color::BRIGHT_MAGENTA`
-- `Color::BRIGHT_YELLOW`
-- `Color::BRIGHT_WHITE`
+- `Colour::BLACK`
+- `Colour::BLUE`
+- `Colour::GREEN`
+- `Colour::CYAN`
+- `Colour::RED`
+- `Colour::MAGENTA`
+- `Colour::YELLOW`
+- `Colour::WHITE`
+- `Colour::BRIGHT_BLACK`
+- `Colour::BRIGHT_BLUE`
+- `Colour::BRIGHT_GREEN`
+- `Colour::BRIGHT_CYAN`
+- `Colour::BRIGHT_RED`
+- `Colour::BRIGHT_MAGENTA`
+- `Colour::BRIGHT_YELLOW`
+- `Colour::BRIGHT_WHITE`
 
 ### Text Output
 
@@ -194,12 +194,12 @@ void conio::printf(int x, int y, const char* format, ...)
 Prints formatted text at specified position.
 
 ```cpp
-void conio::printf(int x, int y, Color fg, const char* format, ...)
+void conio::printf(int x, int y, Colour fg, const char* format, ...)
 ```
 Prints formatted text at specified position with foreground colour.
 
 ```cpp
-void conio::printf(int x, int y, Color fg, Color bg, const char* format, ...)
+void conio::printf(int x, int y, Colour fg, Colour bg, const char* format, ...)
 ```
 Prints formatted text at specified position with foreground and background colours.
 
@@ -216,12 +216,12 @@ void conio::putch(int x, int y, char c)
 Outputs a character at specified position.
 
 ```cpp
-void conio::putch(int x, int y, char c, Color fg)
+void conio::putch(int x, int y, char c, Colour fg)
 ```
 Outputs a character at specified position with foreground colour.
 
 ```cpp
-void conio::putch(int x, int y, char c, Color fg, Color bg)
+void conio::putch(int x, int y, char c, Colour fg, Colour bg)
 ```
 Outputs a character at specified position with foreground and background colours.
 
