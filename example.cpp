@@ -22,25 +22,25 @@ int main() {
     conio::gotoxy(2, 2);
     conio::printf("1. Basic text output at position (2, 2)");
     
-    // Colored text
+    // Coloured text
     conio::gotoxy(2, 4);
     conio::textcolor(conio::Color::GREEN);
-    conio::printf("2. Green colored text");
+    conio::printf("2. Green coloured text");
     
     conio::gotoxy(2, 5);
     conio::textcolor(conio::Color::RED);
-    conio::printf("3. Red colored text");
+    conio::printf("3. Red coloured text");
     
     conio::gotoxy(2, 6);
     conio::textcolor(conio::Color::BRIGHT_CYAN);
-    conio::printf("4. Bright cyan colored text");
+    conio::printf("4. Bright cyan coloured text");
     
     conio::resetattr();
     
-    // Printf with position and color
-    conio::printf(2, 8, conio::Color::BRIGHT_MAGENTA, "5. Printf with x, y, and color parameters");
+    // Printf with position and colour
+    conio::printf(2, 8, conio::Color::BRIGHT_MAGENTA, "5. Printf with x, y, and colour parameters");;
     
-    // Printf with position, foreground and background color
+    // Printf with position, foreground and background colour
     conio::printf(2, 9, conio::Color::YELLOW, conio::Color::RED, "6. Text with yellow fg and red bg");
     
     conio::resetattr();
@@ -52,9 +52,9 @@ int main() {
         conio::putch(c);
     }
     
-    // Colored characters at specific positions
+    // Coloured characters at specific positions
     conio::gotoxy(2, 13);
-    conio::printf("8. Colored characters:");
+    conio::printf("8. Coloured characters:");
     
     int x_start = 2;
     int y_pos = 14;

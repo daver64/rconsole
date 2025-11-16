@@ -18,7 +18,7 @@
 
 namespace conio {
 
-// Color constants
+// Colour constants
 enum class Color {
     BLACK = 0,
     BLUE = 1,
@@ -64,8 +64,8 @@ public:
         curs_set(1);
         initialized = true;
         
-        // Initialize color pairs (foreground, background)
-        // Pairs 1-15 for each foreground color with black background
+        // Initialize colour pairs (foreground, background)
+        // Pairs 1-15 for each foreground colour with black background
         for (int i = 0; i < 8; i++) {
             init_pair(i + 1, i, COLOR_BLACK);
         }
@@ -137,7 +137,7 @@ inline void clrscr() {
 #endif
 }
 
-// Set text color
+// Set text colour
 inline void textcolor(Color fg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -156,7 +156,7 @@ inline void textcolor(Color fg) {
 #endif
 }
 
-// Set background color
+// Set background colour
 inline void textbackground(Color bg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -167,13 +167,13 @@ inline void textbackground(Color bg) {
 #else
     int bg_val = static_cast<int>(bg) % 8;
     int fg_val = 0; // Will be set by next textcolor call
-    // Note: ncurses color pairs need to be initialized with both fg and bg
+    // Note: ncurses colour pairs need to be initialized with both fg and bg
     // For simplicity, we reinitialize the current pair
     PAIR_NUMBER(A_COLOR);
 #endif
 }
 
-// Set both foreground and background colors
+// Set both foreground and background colours
 inline void textattr(Color fg, Color bg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -221,14 +221,14 @@ inline void putch(int x, int y, char c) {
     putch(c);
 }
 
-// Print character at specified position with color
+// Print character at specified position with colour
 inline void putch(int x, int y, char c, Color fg, Color bg) {
     gotoxy(x, y);
     textattr(fg, bg);
     putch(c);
 }
 
-// Print character at specified position with foreground color
+// Print character at specified position with foreground colour
 inline void putch(int x, int y, char c, Color fg) {
     gotoxy(x, y);
     textcolor(fg);
@@ -310,7 +310,7 @@ inline void printf(int x, int y, const char* format, ...) {
     va_end(args);
 }
 
-// Printf at specified position with color
+// Printf at specified position with colour
 inline void printf(int x, int y, Color fg, Color bg, const char* format, ...) {
     gotoxy(x, y);
     textattr(fg, bg);
@@ -330,7 +330,7 @@ inline void printf(int x, int y, Color fg, Color bg, const char* format, ...) {
     va_end(args);
 }
 
-// Printf at specified position with foreground color
+// Printf at specified position with foreground colour
 inline void printf(int x, int y, Color fg, const char* format, ...) {
     gotoxy(x, y);
     textcolor(fg);

@@ -10,7 +10,7 @@ A modern, header-only C++ library for cross-platform console I/O operations. Pro
 - **Rich functionality**:
   - Cursor positioning (`gotoxy`)
   - Text output with positioning (`printf`, `putch`)
-  - Color support (16 colors: black, blue, green, cyan, red, magenta, yellow, white + bright variants)
+  - Colour support (16 colours: black, blue, green, cyan, red, magenta, yellow, white + bright variants)
   - Character input (`getchar`, `getcharecho`, `kbhit`)
   - Screen manipulation (`clrscr`, `getwidth`, `getheight`)
   - Cursor visibility control (`showcursor`)
@@ -53,12 +53,12 @@ int main() {
     conio::gotoxy(10, 5);
     conio::printf("Hello, World!");
     
-    // Print with color
+    // Print with colour
     conio::textcolor(conio::Color::BRIGHT_GREEN);
     conio::gotoxy(10, 7);
     conio::printf("This is green text!");
     
-    // Print at position with color in one call
+    // Print at position with colour in one call
     conio::printf(10, 9, conio::Color::RED, "This is red text!");
     
     // Wait for keypress
@@ -140,29 +140,29 @@ int conio::getheight()
 ```
 Returns the console height in characters.
 
-### Color Control
+### Colour Control
 
 ```cpp
 void conio::textcolor(Color fg)
 ```
-Sets the foreground (text) color.
+Sets the foreground (text) colour.
 
 ```cpp
 void conio::textbackground(Color bg)
 ```
-Sets the background color.
+Sets the background colour.
 
 ```cpp
 void conio::textattr(Color fg, Color bg)
 ```
-Sets both foreground and background colors.
+Sets both foreground and background colours.
 
 ```cpp
 void conio::resetattr()
 ```
 Resets text attributes to default.
 
-#### Available Colors
+#### Available Colours
 
 - `Color::BLACK`
 - `Color::BLUE`
@@ -196,12 +196,12 @@ Prints formatted text at specified position.
 ```cpp
 void conio::printf(int x, int y, Color fg, const char* format, ...)
 ```
-Prints formatted text at specified position with foreground color.
+Prints formatted text at specified position with foreground colour.
 
 ```cpp
 void conio::printf(int x, int y, Color fg, Color bg, const char* format, ...)
 ```
-Prints formatted text at specified position with foreground and background colors.
+Prints formatted text at specified position with foreground and background colours.
 
 ### Character Output
 
@@ -218,12 +218,12 @@ Outputs a character at specified position.
 ```cpp
 void conio::putch(int x, int y, char c, Color fg)
 ```
-Outputs a character at specified position with foreground color.
+Outputs a character at specified position with foreground colour.
 
 ```cpp
 void conio::putch(int x, int y, char c, Color fg, Color bg)
 ```
-Outputs a character at specified position with foreground and background colors.
+Outputs a character at specified position with foreground and background colours.
 
 ### Character Input
 
@@ -258,8 +258,8 @@ example.exe
 
 The example demonstrates:
 - Basic text positioning
-- Color usage (foreground and background)
-- Character output with colors
+- Colour usage (foreground and background)
+- Character output with colours
 - Drawing shapes (boxes)
 - Console dimensions
 - Animated graphics (bouncing ball)
@@ -277,7 +277,7 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 - On Linux, the library uses ncurses which requires terminal support
 - On Windows, the library uses the native Console API
 - The library is thread-safe for initialization/cleanup but concurrent console operations from multiple threads may produce unexpected results
-- Some color combinations may appear differently depending on the terminal/console configuration
+- Some colour combinations may appear differently depending on the terminal/console configuration
 
 ## Author
 
