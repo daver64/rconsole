@@ -1,0 +1,69 @@
+# Build directories
+build/
+bin/
+obj/
+out/
+dist/
+
+# Compiled object files
+*.o
+*.obj
+*.elf
+
+# Executables
+*.exe
+*.out
+*.app
+example
+a.out
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+*.la
+*.lo
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# IDE and Editor files
+.vscode/
+.vs/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.log
+
+# Package managers
+vcpkg_installed/
+conan/
