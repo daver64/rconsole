@@ -43,7 +43,7 @@ sudo dnf install ncurses-devel
 #include "conio.hpp"
 
 int main() {
-    // Initialize console
+    // Initialise console
     conio::init();
     
     // Clear screen
@@ -54,7 +54,7 @@ int main() {
     conio::printf("Hello, World!");
     
     // Print with colour
-    conio::textcolor(conio::Colour::BRIGHT_GREEN);
+    conio::textcolour(conio::Colour::BRIGHT_GREEN);
     conio::gotoxy(10, 7);
     conio::printf("This is green text!");
     
@@ -104,7 +104,7 @@ g++ -std=c++11 example.cpp -o example.exe
 ```cpp
 void conio::init()
 ```
-Initializes the console. Must be called before using other functions.
+Initialises the console. Must be called before using other functions.
 
 ```cpp
 void conio::cleanup()
@@ -143,7 +143,7 @@ Returns the console height in characters.
 ### Colour Control
 
 ```cpp
-void conio::textcolor(Colour fg)
+void conio::textcolour(Colour fg)
 ```
 Sets the foreground (text) colour.
 
