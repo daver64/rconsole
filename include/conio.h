@@ -65,10 +65,17 @@ public:
         initialized = true;
         
         // Initialize colour pairs (foreground, background)
-        // Pairs 1-15 for each foreground colour with black background
-        for (int i = 0; i < 8; i++) {
-            init_pair(i + 1, i, COLOR_BLACK);
-        }
+        // Map our enum order to ncurses COLOR_ constants
+        // Our enum: BLACK(0), BLUE(1), GREEN(2), CYAN(3), RED(4), MAGENTA(5), YELLOW(6), WHITE(7)
+        // ncurses:  BLACK(0), RED(1),  GREEN(2), YELLOW(3), BLUE(4), MAGENTA(5), CYAN(6),  WHITE(7)
+        init_pair(1, COLOR_BLACK, COLOR_BLACK);   // BLACK
+        init_pair(2, COLOR_BLUE, COLOR_BLACK);    // BLUE
+        init_pair(3, COLOR_GREEN, COLOR_BLACK);   // GREEN
+        init_pair(4, COLOR_CYAN, COLOR_BLACK);    // CYAN
+        init_pair(5, COLOR_RED, COLOR_BLACK);     // RED
+        init_pair(6, COLOR_MAGENTA, COLOR_BLACK); // MAGENTA
+        init_pair(7, COLOR_YELLOW, COLOR_BLACK);  // YELLOW
+        init_pair(8, COLOR_WHITE, COLOR_BLACK);   // WHITE
 #endif
     }
 
@@ -146,11 +153,15 @@ inline void textcolor(Colour fg) {
     WORD attrs = (csbi.wAttributes & 0xF0) | static_cast<WORD>(fg);
     SetConsoleTextAttribute(hConsole, attrs);
 #else
-    int color_val = static_cast<int>(fg);
-    if (color_val < 8) {
-        attron(COLOR_PAIR(color_val + 1));
+    int colour_val = static_cast<int>(fg);
+    bool is_bright = (colour_val >= 8);
+    int base_colour = is_bright ? (colour_val - 8) : colour_val;
+    
+    attron(COLOR_PAIR(base_colour + 1));
+    if (is_bright) {
+        attron(A_BOLD);
     } else {
-        attron(COLOR_PAIR((color_val - 8) + 1) | A_BOLD);
+        attroff(A_BOLD);
     }
     refresh();
 #endif
@@ -166,7 +177,7 @@ inline void textbackground(Colour bg) {
     SetConsoleTextAttribute(hConsole, attrs);
 #else
     int bg_val = static_cast<int>(bg) % 8;
-    int fg_val = 0; // Will be set by next textcolor call
+    int fg_val = 0; // Will be set by next textcolour call
     // Note: ncurses colour pairs need to be initialized with both fg and bg
     // For simplicity, we reinitialize the current pair
     PAIR_NUMBER(A_COLOR);
