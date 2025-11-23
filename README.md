@@ -10,6 +10,7 @@ A modern, header-only C++ library for cross-platform console I/O operations. Pro
 - **Rich functionality**:
   - Cursor positioning (`gotoxy`)
   - Text output with positioning (`printf`, `putch`)
+  - Unicode support (UTF-8 strings, wide characters with `putwch`, `wprintf`, `getwchar`)
   - Colour support (16 colours: black, blue, green, cyan, red, magenta, yellow, white + bright variants)
   - Character input (`getchar`, `getcharecho`, `kbhit`)
   - Screen manipulation (`clrscr`, `getwidth`, `getheight`)
@@ -19,7 +20,7 @@ A modern, header-only C++ library for cross-platform console I/O operations. Pro
 
 ### Linux
 - C++11 or later
-- ncurses library
+- ncurses library (ncursesw for full Unicode support)
 
 Install ncurses on Ubuntu/Debian:
 ```bash
@@ -77,24 +78,29 @@ int main() {
 
 Compile with ncurses:
 ```bash
-g++ -std=c++11 example.cpp -o example -lncurses
+g++ -std=c++11 -I include example.cpp -o example -lncurses
 ```
 
-Or with optimization:
+Compile with ncursesw for Unicode support:
 ```bash
-g++ -std=c++11 -O2 example.cpp -o example -lncurses
+g++ -std=c++11 -I include example.cpp -o example -lncursesw
+```
+
+Or with optimisation:
+```bash
+g++ -std=c++11 -O2 -I include example.cpp -o example -lncurses
 ```
 
 ### Windows
 
 Using MSVC (Visual Studio):
 ```bash
-cl /EHsc /std:c++11 example.cpp
+cl /EHsc /std:c++11 /I include example.cpp
 ```
 
 Using MinGW:
 ```bash
-g++ -std=c++11 example.cpp -o example.exe
+g++ -std=c++11 -I include example.cpp -o example.exe
 ```
 
 ## API Reference
@@ -225,6 +231,68 @@ void conio::putch(int x, int y, char c, Colour fg, Colour bg)
 ```
 Outputs a character at specified position with foreground and background colours.
 
+### Unicode Output
+
+```cpp
+void conio::putwch(wchar_t wc)
+```
+Outputs a wide character (Unicode) at current cursor position.
+
+```cpp
+void conio::putwch(int x, int y, wchar_t wc)
+```
+Outputs a wide character at specified position.
+
+```cpp
+void conio::putwch(int x, int y, wchar_t wc, Colour fg)
+```
+Outputs a wide character at specified position with foreground colour.
+
+```cpp
+void conio::putwch(int x, int y, wchar_t wc, Colour fg, Colour bg)
+```
+Outputs a wide character at specified position with foreground and background colours.
+
+```cpp
+void conio::wprintf(const wchar_t* wstr)
+```
+Outputs a wide character string (Unicode) at current cursor position.
+
+```cpp
+void conio::wprintf(int x, int y, const wchar_t* wstr)
+```
+Outputs a wide character string at specified position.
+
+```cpp
+void conio::wprintf(int x, int y, Colour fg, const wchar_t* wstr)
+```
+Outputs a wide character string at specified position with foreground colour.
+
+```cpp
+void conio::wprintf(int x, int y, Colour fg, Colour bg, const wchar_t* wstr)
+```
+Outputs a wide character string at specified position with foreground and background colours.
+
+```cpp
+void conio::print_utf8(const char* utf8_str)
+```
+Outputs a UTF-8 encoded string at current cursor position.
+
+```cpp
+void conio::print_utf8(int x, int y, const char* utf8_str)
+```
+Outputs a UTF-8 encoded string at specified position.
+
+```cpp
+void conio::print_utf8(int x, int y, Colour fg, const char* utf8_str)
+```
+Outputs a UTF-8 encoded string at specified position with foreground colour.
+
+```cpp
+void conio::print_utf8(int x, int y, Colour fg, Colour bg, const char* utf8_str)
+```
+Outputs a UTF-8 encoded string at specified position with foreground and background colours.
+
 ### Character Input
 
 ```cpp
@@ -242,27 +310,53 @@ bool conio::kbhit()
 ```
 Checks if a key has been pressed (non-blocking).
 
+```cpp
+wint_t conio::getwchar()
+```
+Reads a wide character (Unicode input) without echo.
+
+```cpp
+wint_t conio::getwcharecho()
+```
+Reads a wide character (Unicode input) with echo.
+
 ## Example Program
 
-Run the included example:
+Run the included examples:
 
 ```bash
-# Linux
-g++ -std=c++11 example.cpp -o example -lncurses
+# Linux - Basic example
+g++ -std=c++11 -I include example.cpp -o example -lncurses
 ./example
 
-# Windows
-cl /EHsc example.cpp
+# Linux - Unicode example (requires ncursesw)
+g++ -std=c++11 -I include example_unicode.cpp -o example_unicode -lncursesw
+./example_unicode
+
+# Windows - Basic example
+cl /EHsc /I include example.cpp
 example.exe
+
+# Windows - Unicode example
+cl /EHsc /I include example_unicode.cpp
+example_unicode.exe
 ```
 
-The example demonstrates:
+The basic example demonstrates:
 - Basic text positioning
 - Colour usage (foreground and background)
 - Character output with colours
 - Drawing shapes (boxes)
 - Console dimensions
 - Animated graphics (bouncing ball)
+
+The Unicode example demonstrates:
+- UTF-8 emoji and symbols
+- Unicode box drawing characters
+- Mathematical symbols
+- Greek letters
+- Multiple language support (English, Spanish, French, German, Russian, Japanese, Chinese, Korean, Arabic)
+- Unicode progress bars
 
 ## License
 
@@ -274,10 +368,13 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 
 ## Notes
 
-- On Linux, the library uses ncurses which requires terminal support
-- On Windows, the library uses the native Console API
-- The library is thread-safe for initialization/cleanup but concurrent console operations from multiple threads may produce unexpected results
+- The API uses British English spelling (e.g., `textcolour` instead of `textcolor`)
+- On Linux, the library uses ncursesw (wide character version) which requires terminal support for Unicode
+- On Windows, the library uses the native Console API with UTF-8 code pages enabled
+- Unicode support includes UTF-8 strings, wide character strings, emoji, box drawing characters, mathematical symbols, and multiple languages
+- The library is thread-safe for initialisation/cleanup but concurrent console operations from multiple threads may produce unexpected results
 - Some colour combinations may appear differently depending on the terminal/console configuration
+- For best Unicode support, ensure your terminal/console is configured to use a UTF-8 locale
 
 ## Author
 

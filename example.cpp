@@ -24,15 +24,15 @@ int main() {
     
     // Coloured text
     conio::gotoxy(2, 4);
-    conio::textcolor(conio::Colour::GREEN);
+    conio::textcolour(conio::Colour::GREEN);
     conio::printf("2. Green coloured text");
     
     conio::gotoxy(2, 5);
-    conio::textcolor(conio::Colour::RED);
+    conio::textcolour(conio::Colour::RED);
     conio::printf("3. Red coloured text");
     
     conio::gotoxy(2, 6);
-    conio::textcolor(conio::Colour::BRIGHT_CYAN);
+    conio::textcolour(conio::Colour::BRIGHT_CYAN);
     conio::printf("4. Bright cyan coloured text");
     
     conio::resetattr();
@@ -82,7 +82,7 @@ int main() {
     int box_width = 40;
     int box_height = 5;
     
-    conio::textcolor(conio::Colour::BRIGHT_WHITE);
+    conio::textcolour(conio::Colour::BRIGHT_WHITE);
     
     // Top and bottom borders
     for (int x = box_x; x < box_x + box_width; x++) {
@@ -115,7 +115,7 @@ int main() {
     
     // Animated demonstration
     conio::gotoxy(2, 25);
-    conio::textcolor(conio::Colour::BRIGHT_YELLOW);
+    conio::textcolour(conio::Colour::BRIGHT_YELLOW);
     conio::printf("11. Animated bouncing ball (5 seconds)...");
     conio::resetattr();
     
@@ -157,7 +157,7 @@ int main() {
     // Final message
     conio::showcursor(true);
     conio::gotoxy(2, height - 2);
-    conio::textcolor(conio::Colour::BRIGHT_WHITE);
+    conio::textcolour(conio::Colour::BRIGHT_WHITE);
     conio::printf("Press any key to exit...");
     conio::resetattr();
     

@@ -5,15 +5,19 @@
 #include <cstdarg>
 #include <string>
 #include <memory>
+#include <clocale>
 
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
     #include <conio.h>
 #else
-    #include <ncurses.h>
+    #define _XOPEN_SOURCE_EXTENDED 1
+    #include <ncursesw/ncurses.h>
     #include <unistd.h>
     #include <termios.h>
+    #include <locale.h>
+    #include <wchar.h>
 #endif
 
 namespace conio {
@@ -55,7 +59,13 @@ public:
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         GetConsoleScreenBufferInfo(hConsole, &csbi);
         defaultAttrs = csbi.wAttributes;
+        // Set UTF-8 code page for Unicode support
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
 #else
+        // Set locale for UTF-8 support before initializing ncurses
+        setlocale(LC_ALL, "");
+        
         initscr();
         start_color();
         cbreak();
@@ -145,7 +155,7 @@ inline void clrscr() {
 }
 
 // Set text colour
-inline void textcolor(Colour fg) {
+inline void textcolour(Colour fg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -242,8 +252,117 @@ inline void putch(int x, int y, char c, Colour fg, Colour bg) {
 // Print character at specified position with foreground colour
 inline void putch(int x, int y, char c, Colour fg) {
     gotoxy(x, y);
-    textcolor(fg);
+    textcolour(fg);
     putch(c);
+}
+
+// Wide character (Unicode) support
+
+// Print wide character at current position
+inline void putwch(wchar_t wc) {
+#ifdef _WIN32
+    wprintf(L"%lc", wc);
+    fflush(stdout);
+#else
+    addnwstr(&wc, 1);
+    refresh();
+#endif
+}
+
+// Print wide character at specified position
+inline void putwch(int x, int y, wchar_t wc) {
+    gotoxy(x, y);
+    putwch(wc);
+}
+
+// Print wide character at specified position with foreground colour
+inline void putwch(int x, int y, wchar_t wc, Colour fg) {
+    gotoxy(x, y);
+    textcolour(fg);
+    putwch(wc);
+}
+
+// Print wide character at specified position with colour
+inline void putwch(int x, int y, wchar_t wc, Colour fg, Colour bg) {
+    gotoxy(x, y);
+    textattr(fg, bg);
+    putwch(wc);
+}
+
+// Print wide string (Unicode) at current position
+inline void wprintf(const wchar_t* wstr) {
+#ifdef _WIN32
+    ::wprintf(L"%ls", wstr);
+    fflush(stdout);
+#else
+    addnwstr(wstr, wcslen(wstr));
+    refresh();
+#endif
+}
+
+// Print wide string at specified position
+inline void wprintf(int x, int y, const wchar_t* wstr) {
+    gotoxy(x, y);
+    wprintf(wstr);
+}
+
+// Print wide string at specified position with foreground colour
+inline void wprintf(int x, int y, Colour fg, const wchar_t* wstr) {
+    gotoxy(x, y);
+    textcolour(fg);
+    wprintf(wstr);
+}
+
+// Print wide string at specified position with colour
+inline void wprintf(int x, int y, Colour fg, Colour bg, const wchar_t* wstr) {
+    gotoxy(x, y);
+    textattr(fg, bg);
+    wprintf(wstr);
+}
+
+// Print UTF-8 string (for convenience)
+inline void print_utf8(const char* utf8_str) {
+#ifdef _WIN32
+    // Windows: convert UTF-8 to wide chars and print
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, NULL, 0);
+    if (wlen > 0) {
+        wchar_t* wstr = new wchar_t[wlen];
+        MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, wstr, wlen);
+        wprintf(L"%ls", wstr);
+        delete[] wstr;
+        fflush(stdout);
+    }
+#else
+    // Linux: ncurses with UTF-8 locale handles this directly
+    addstr(utf8_str);
+    refresh();
+#endif
+}
+
+// Print UTF-8 string with foreground colour (no position)
+inline void print_utf8(Colour fg, const char* utf8_str) {
+    textcolour(fg);
+    print_utf8(utf8_str);
+}
+
+// Print UTF-8 string at specified position
+inline void print_utf8(int x, int y, const char* utf8_str) {
+    gotoxy(x, y);
+    print_utf8(utf8_str);
+}
+
+// Print UTF-8 string at specified position with foreground colour
+inline void print_utf8(int x, int y, Colour fg, const char* utf8_str) {
+    gotoxy(x, y);
+    textcolour(fg);
+    print_utf8(utf8_str);
+}
+
+// Print UTF-8 string at specified position with colour
+inline void print_utf8(int x, int y, Colour fg, Colour bg, const char* utf8_str) {
+    gotoxy(x, y);
+    textattr(fg, bg);
+    print_utf8(utf8_str);
 }
 
 // Get a character (non-blocking on some systems)
@@ -265,6 +384,32 @@ inline int getcharecho() {
     int ch = ::getch();
     noecho();
     return ch;
+#endif
+}
+
+// Get a wide character (Unicode input)
+inline wint_t getwchar() {
+#ifdef _WIN32
+    wint_t wc = _getwch();
+    return wc;
+#else
+    wint_t wc;
+    get_wch(&wc);
+    return wc;
+#endif
+}
+
+// Get a wide character with echo
+inline wint_t getwcharecho() {
+#ifdef _WIN32
+    wint_t wc = _getwche();
+    return wc;
+#else
+    echo();
+    wint_t wc;
+    get_wch(&wc);
+    noecho();
+    return wc;
 #endif
 }
 
@@ -344,7 +489,7 @@ inline void printf(int x, int y, Colour fg, Colour bg, const char* format, ...) 
 // Printf at specified position with foreground colour
 inline void printf(int x, int y, Colour fg, const char* format, ...) {
     gotoxy(x, y);
-    textcolor(fg);
+    textcolour(fg);
     
     va_list args;
     va_start(args, format);
