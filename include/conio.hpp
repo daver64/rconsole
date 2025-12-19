@@ -10,7 +10,16 @@
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
-    #include <conio.h>
+    #include <io.h>
+    // Declare Windows console functions
+    extern "C" {
+        int _kbhit(void);
+        int _getch(void);
+        int _getche(void);
+        int _putch(int c);
+        wint_t _getwch(void);
+        wint_t _getwche(void);
+    }
 #else
     #define _XOPEN_SOURCE_EXTENDED 1
     #include <ncursesw/ncurses.h>
@@ -261,8 +270,9 @@ inline void putch(int x, int y, char c, Colour fg) {
 // Print wide character at current position
 inline void putwch(wchar_t wc) {
 #ifdef _WIN32
-    wprintf(L"%lc", wc);
-    fflush(stdout);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD written;
+    WriteConsoleW(hConsole, &wc, 1, &written, NULL);
 #else
     addnwstr(&wc, 1);
     refresh();
@@ -290,10 +300,11 @@ inline void putwch(int x, int y, wchar_t wc, Colour fg, Colour bg) {
 }
 
 // Print wide string (Unicode) at current position
-inline void wprintf(const wchar_t* wstr) {
+inline void wputs(const wchar_t* wstr) {
 #ifdef _WIN32
-    ::wprintf(L"%ls", wstr);
-    fflush(stdout);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD written;
+    WriteConsoleW(hConsole, wstr, static_cast<DWORD>(wcslen(wstr)), &written, NULL);
 #else
     addnwstr(wstr, wcslen(wstr));
     refresh();
@@ -301,23 +312,23 @@ inline void wprintf(const wchar_t* wstr) {
 }
 
 // Print wide string at specified position
-inline void wprintf(int x, int y, const wchar_t* wstr) {
+inline void wputs(int x, int y, const wchar_t* wstr) {
     gotoxy(x, y);
-    wprintf(wstr);
+    wputs(wstr);
 }
 
 // Print wide string at specified position with foreground colour
-inline void wprintf(int x, int y, Colour fg, const wchar_t* wstr) {
+inline void wputs(int x, int y, Colour fg, const wchar_t* wstr) {
     gotoxy(x, y);
     textcolour(fg);
-    wprintf(wstr);
+    wputs(wstr);
 }
 
 // Print wide string at specified position with colour
-inline void wprintf(int x, int y, Colour fg, Colour bg, const wchar_t* wstr) {
+inline void wputs(int x, int y, Colour fg, Colour bg, const wchar_t* wstr) {
     gotoxy(x, y);
     textattr(fg, bg);
-    wprintf(wstr);
+    wputs(wstr);
 }
 
 // Print UTF-8 string (for convenience)
@@ -328,9 +339,10 @@ inline void print_utf8(const char* utf8_str) {
     if (wlen > 0) {
         wchar_t* wstr = new wchar_t[wlen];
         MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, wstr, wlen);
-        wprintf(L"%ls", wstr);
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD written;
+        WriteConsoleW(hConsole, wstr, static_cast<DWORD>(wcslen(wstr)), &written, NULL);
         delete[] wstr;
-        fflush(stdout);
     }
 #else
     // Linux: ncurses with UTF-8 locale handles this directly

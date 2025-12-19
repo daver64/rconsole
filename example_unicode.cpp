@@ -1,4 +1,4 @@
-#include "conio.h"
+#include "conio.hpp"
 #include <thread>
 #include <chrono>
 
@@ -65,7 +65,7 @@ int main() {
     conio::putwch(L'╝');
     
     // Text inside box
-    conio::wprintf(box_x + 5, box_y + 2, conio::Colour::BRIGHT_WHITE, L"Unicode ♥ Console!");
+    conio::wputs(box_x + 5, box_y + 2, conio::Colour::BRIGHT_WHITE, L"Unicode ♥ Console!");
     
     conio::resetattr();
     

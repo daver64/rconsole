@@ -95,7 +95,7 @@ g++ -std=c++11 -O2 -I include example.cpp -o example -lncurses
 
 Using MSVC (Visual Studio):
 ```bash
-cl /EHsc /std:c++11 /I include example.cpp
+cl /EHsc /std:c++14 /I include example.cpp
 ```
 
 Using MinGW:
