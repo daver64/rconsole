@@ -22,12 +22,12 @@ int main() {
     conio::gotoxy(2, 2);
     conio::printf("1. UTF-8 Emoji Support:");
     conio::gotoxy(4, 3);
-    conio::print_utf8("   🌟 Stars  🎨 Art  🚀 Rocket  💻 Computer  ✅ Check");
+    conio::print_utf8(" 🐿🧞‍♀️  🌟 Stars  🎨 Art  🚀 Rocket  💻 Computer  ✅ Check");
     
     conio::gotoxy(4, 4);
-    conio::print_utf8(conio::Colour::BRIGHT_RED, "   ❤️ Heart  ");
-    conio::print_utf8(conio::Colour::BRIGHT_GREEN, "💚 Green  ");
-    conio::print_utf8(conio::Colour::BRIGHT_BLUE, "💙 Blue");
+    conio::print_utf8(conio::Colour::BRIGHT_RED, "  🤩 ❤️ Heart  ");
+    conio::print_utf8(conio::Colour::BRIGHT_GREEN, "👿💚 Green  ");
+    conio::print_utf8(conio::Colour::BRIGHT_BLUE, "🦀💙 Blue");
     
     // Unicode box drawing
     conio::gotoxy(2, 6);
