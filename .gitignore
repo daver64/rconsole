@@ -16,7 +16,7 @@ dist/
 *.app
 example
 a.out
-
+test_*
 # Precompiled Headers
 *.gch
 *.pch

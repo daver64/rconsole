@@ -76,19 +76,32 @@ int main() {
 
 ### Linux
 
-Compile with ncurses:
+**Important:** Use `ncursesw` (not plain `ncurses`) for full Unicode support, especially for the `example_unicode` demo.
+
+Compile with ncursesw (recommended for Unicode):
+```bash
+g++ -std=c++11 -I include example.cpp -o example -lncursesw
+g++ -std=c++11 -I include example_unicode.cpp -o example_unicode -lncursesw
+```
+
+Compile with standard ncurses (basic support, no wide characters):
 ```bash
 g++ -std=c++11 -I include example.cpp -o example -lncurses
 ```
 
-Compile with ncursesw for Unicode support:
+With optimization:
 ```bash
-g++ -std=c++11 -I include example.cpp -o example -lncursesw
+g++ -std=c++11 -O2 -I include example.cpp -o example -lncursesw
 ```
 
-Or with optimisation:
+Install ncurses libraries on Ubuntu/Debian:
 ```bash
-g++ -std=c++11 -O2 -I include example.cpp -o example -lncurses
+sudo apt-get install libncursesw-dev
+```
+
+Install on Fedora/RHEL:
+```bash
+sudo dnf install ncurses-devel
 ```
 
 ### Windows
@@ -96,6 +109,34 @@ g++ -std=c++11 -O2 -I include example.cpp -o example -lncurses
 Using MSVC (Visual Studio):
 ```bash
 cl /EHsc /std:c++14 /I include example.cpp
+cl /EHsc /std:c++14 /I include example_unicode.cpp
+```
+
+### Building with Make or CMake
+
+Create a simple Makefile:
+```makefile
+CXX = g++
+CXXFLAGS = -std=c++11 -I include
+LDFLAGS = -lncursesw
+
+.PHONY: all clean
+
+all: example example_unicode
+
+example: example.cpp include/conio.hpp
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+
+example_unicode: example_unicode.cpp include/conio.hpp
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+
+clean:
+	rm -f example example_unicode
+```
+
+Then build with:
+```bash
+make
 ```
 
 Using MinGW:

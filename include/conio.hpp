@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <clocale>
+#include <mutex>
 
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
@@ -50,6 +51,12 @@ enum class Colour {
     BRIGHT_YELLOW = 14,
     BRIGHT_WHITE = 15
 };
+
+// Global mutex for thread-safe console operations
+inline std::mutex& get_console_mutex() {
+    static std::mutex console_mutex;
+    return console_mutex;
+}
 
 // RAII wrapper for console initialization
 class Console {
@@ -119,13 +126,20 @@ inline std::unique_ptr<Console>& get_console() {
     return console_instance;
 }
 
+// Check if console is initialized
+inline bool is_initialized() {
+    return get_console() != nullptr;
+}
+
 // Initialize console (must be called before using other functions)
 inline void init() {
+    std::lock_guard<std::mutex> lock(get_console_mutex());
     get_console().reset(new Console());
 }
 
 // Cleanup console (automatically called on exit if using init())
 inline void cleanup() {
+    std::lock_guard<std::mutex> lock(get_console_mutex());
     get_console().reset();
 }
 
@@ -146,13 +160,14 @@ inline void gotoxy(int x, int y) {
 inline void clrscr() {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) return;
+    
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    DWORD cellCount;
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
+    
+    DWORD cellCount = csbi.dwSize.X * csbi.dwSize.Y;
     DWORD count;
     COORD homeCoord = {0, 0};
-
-    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
-    cellCount = csbi.dwSize.X * csbi.dwSize.Y;
 
     FillConsoleOutputCharacter(hConsole, ' ', cellCount, homeCoord, &count);
     FillConsoleOutputAttribute(hConsole, csbi.wAttributes, cellCount, homeCoord, &count);
@@ -167,8 +182,11 @@ inline void clrscr() {
 inline void textcolour(Colour fg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) return;
+    
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
+    
     WORD attrs = (csbi.wAttributes & 0xF0) | static_cast<WORD>(fg);
     SetConsoleTextAttribute(hConsole, attrs);
 #else
@@ -190,16 +208,19 @@ inline void textcolour(Colour fg) {
 inline void textbackground(Colour bg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) return;
+    
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
+    
     WORD attrs = (csbi.wAttributes & 0x0F) | (static_cast<WORD>(bg) << 4);
     SetConsoleTextAttribute(hConsole, attrs);
 #else
     int bg_val = static_cast<int>(bg) % 8;
-    int fg_val = 0; // Will be set by next textcolour call
-    // Note: ncurses colour pairs need to be initialized with both fg and bg
-    // For simplicity, we reinitialize the current pair
-    PAIR_NUMBER(A_COLOR);
+    // Initialize a colour pair with current foreground (WHITE) and specified background
+    init_pair(64, COLOR_WHITE, bg_val);
+    attron(COLOR_PAIR(64));
+    refresh();
 #endif
 }
 
@@ -207,15 +228,21 @@ inline void textbackground(Colour bg) {
 inline void textattr(Colour fg, Colour bg) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) return;
+    
     WORD attrs = static_cast<WORD>(fg) | (static_cast<WORD>(bg) << 4);
     SetConsoleTextAttribute(hConsole, attrs);
 #else
     int fg_val = static_cast<int>(fg) % 8;
     int bg_val = static_cast<int>(bg) % 8;
-    int pair_num = fg_val + bg_val * 8 + 16; // Offset to avoid conflicts
+    // Use a pair number that safely fits within ncurses limits (1-255)
+    // Formula: pair_num = 1 + bg_val * 8 + fg_val (ensures 1 <= pair_num <= 64)
+    int pair_num = 1 + bg_val * 8 + fg_val;
     
-    init_pair(pair_num, fg_val, bg_val);
-    attron(COLOR_PAIR(pair_num));
+    if (pair_num < 256) {
+        init_pair(pair_num, fg_val, bg_val);
+        attron(COLOR_PAIR(pair_num));
+    }
     
     if (static_cast<int>(fg) >= 8) {
         attron(A_BOLD);
@@ -337,12 +364,11 @@ inline void print_utf8(const char* utf8_str) {
     // Windows: convert UTF-8 to wide chars and print
     int wlen = MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, NULL, 0);
     if (wlen > 0) {
-        wchar_t* wstr = new wchar_t[wlen];
-        MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, wstr, wlen);
+        std::unique_ptr<wchar_t[]> wstr(new wchar_t[wlen]);
+        MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, wstr.get(), wlen);
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         DWORD written;
-        WriteConsoleW(hConsole, wstr, static_cast<DWORD>(wcslen(wstr)), &written, NULL);
-        delete[] wstr;
+        WriteConsoleW(hConsole, wstr.get(), static_cast<DWORD>(wcslen(wstr.get())), &written, NULL);
     }
 #else
     // Linux: ncurses with UTF-8 locale handles this directly
@@ -392,6 +418,8 @@ inline int getcharecho() {
 #ifdef _WIN32
     return _getche();
 #else
+    // Note: ncurses input in raw mode may need special handling
+    // For now, simply enable echo, read, and disable echo
     echo();
     int ch = ::getch();
     noecho();
@@ -417,6 +445,8 @@ inline wint_t getwcharecho() {
     wint_t wc = _getwche();
     return wc;
 #else
+    // Note: ncurses input in raw mode may need special handling
+    // For now, simply enable echo, read, and disable echo
     echo();
     wint_t wc;
     get_wch(&wc);
@@ -442,11 +472,8 @@ inline bool kbhit() {
 #endif
 }
 
-// Printf at current position
-inline void printf(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    
+// Helper function for printf operations
+inline void vprintf_impl(const char* format, va_list args) {
 #ifdef _WIN32
     vprintf(format, args);
 #else
@@ -455,7 +482,13 @@ inline void printf(const char* format, ...) {
     printw("%s", buffer);
     refresh();
 #endif
-    
+}
+
+// Printf at current position
+inline void printf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vprintf_impl(format, args);
     va_end(args);
 }
 
@@ -465,16 +498,7 @@ inline void printf(int x, int y, const char* format, ...) {
     
     va_list args;
     va_start(args, format);
-    
-#ifdef _WIN32
-    vprintf(format, args);
-#else
-    char buffer[4096];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    printw("%s", buffer);
-    refresh();
-#endif
-    
+    vprintf_impl(format, args);
     va_end(args);
 }
 
@@ -485,16 +509,7 @@ inline void printf(int x, int y, Colour fg, Colour bg, const char* format, ...) 
     
     va_list args;
     va_start(args, format);
-    
-#ifdef _WIN32
-    vprintf(format, args);
-#else
-    char buffer[4096];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    printw("%s", buffer);
-    refresh();
-#endif
-    
+    vprintf_impl(format, args);
     va_end(args);
 }
 
@@ -505,16 +520,7 @@ inline void printf(int x, int y, Colour fg, const char* format, ...) {
     
     va_list args;
     va_start(args, format);
-    
-#ifdef _WIN32
-    vprintf(format, args);
-#else
-    char buffer[4096];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    printw("%s", buffer);
-    refresh();
-#endif
-    
+    vprintf_impl(format, args);
     va_end(args);
 }
 
@@ -522,12 +528,15 @@ inline void printf(int x, int y, Colour fg, const char* format, ...) {
 inline int getwidth() {
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) return 80; // Default width
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return 80;
     return csbi.srWindow.Right - csbi.srWindow.Left + 1;
 #else
-    int width, height;
+    int width = 0, height = 0;
     getmaxyx(stdscr, height, width);
-    return width;
+    (void)height; // height is only needed for getmaxyx macro
+    return width > 0 ? width : 80;
 #endif
 }
 
@@ -535,7 +544,9 @@ inline int getwidth() {
 inline int getheight() {
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) return 24; // Default height
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return 24;
     return csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 #else
     int width, height;
