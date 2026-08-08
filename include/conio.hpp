@@ -52,6 +52,27 @@ enum class Colour {
     BRIGHT_WHITE = 15
 };
 
+#ifndef _WIN32
+namespace detail {
+
+inline short to_ncurses_colour(Colour colour) {
+    // Colour enum order differs from ncurses constants, so map explicitly.
+    switch (static_cast<int>(colour) % 8) {
+        case 0: return COLOR_BLACK;
+        case 1: return COLOR_BLUE;
+        case 2: return COLOR_GREEN;
+        case 3: return COLOR_CYAN;
+        case 4: return COLOR_RED;
+        case 5: return COLOR_MAGENTA;
+        case 6: return COLOR_YELLOW;
+        case 7: return COLOR_WHITE;
+        default: return COLOR_WHITE;
+    }
+}
+
+} // namespace detail
+#endif
+
 // Global mutex for thread-safe console operations
 inline std::mutex& get_console_mutex() {
     static std::mutex console_mutex;
@@ -71,18 +92,29 @@ private:
 public:
     Console() {
 #ifdef _WIN32
+        hConsole = INVALID_HANDLE_VALUE;
+        defaultAttrs = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+
         hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo(hConsole, &csbi);
-        defaultAttrs = csbi.wAttributes;
+        if (hConsole != INVALID_HANDLE_VALUE) {
+            CONSOLE_SCREEN_BUFFER_INFO csbi;
+            if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+                defaultAttrs = csbi.wAttributes;
+            }
+        }
+
         // Set UTF-8 code page for Unicode support
         SetConsoleOutputCP(CP_UTF8);
         SetConsoleCP(CP_UTF8);
 #else
+        initialized = false;
+
         // Set locale for UTF-8 support before initializing ncurses
         setlocale(LC_ALL, "");
-        
-        initscr();
+
+        if (initscr() == nullptr) {
+            return;
+        }
         start_color();
         cbreak();
         noecho();
@@ -107,7 +139,9 @@ public:
 
     ~Console() {
 #ifdef _WIN32
-        SetConsoleTextAttribute(hConsole, defaultAttrs);
+        if (hConsole != INVALID_HANDLE_VALUE) {
+            SetConsoleTextAttribute(hConsole, defaultAttrs);
+        }
 #else
         if (initialized) {
             endwin();
@@ -216,10 +250,31 @@ inline void textbackground(Colour bg) {
     WORD attrs = (csbi.wAttributes & 0x0F) | (static_cast<WORD>(bg) << 4);
     SetConsoleTextAttribute(hConsole, attrs);
 #else
-    int bg_val = static_cast<int>(bg) % 8;
-    // Initialize a colour pair with current foreground (WHITE) and specified background
-    init_pair(64, COLOR_WHITE, bg_val);
-    attron(COLOR_PAIR(64));
+    attr_t attrs = 0;
+    short pair = 0;
+    short current_fg = COLOR_WHITE;
+    short current_bg = COLOR_BLACK;
+
+    if (attr_get(&attrs, &pair, nullptr) == OK && pair > 0) {
+        short fg = COLOR_WHITE;
+        short bg_current = COLOR_BLACK;
+        if (pair_content(pair, &fg, &bg_current) == OK) {
+            current_fg = fg;
+            current_bg = bg_current;
+        }
+    }
+
+    short bg_val = detail::to_ncurses_colour(bg);
+    int pair_num = 1 + (bg_val % 8) * 8 + (current_fg % 8);
+    if (pair_num >= COLOR_PAIRS) {
+        pair_num = 1 + (current_bg % 8) * 8 + (current_fg % 8);
+    }
+    if (pair_num >= COLOR_PAIRS) {
+        pair_num = 1;
+    }
+
+    init_pair(static_cast<short>(pair_num), current_fg, bg_val);
+    attron(COLOR_PAIR(pair_num));
     refresh();
 #endif
 }
@@ -233,19 +288,20 @@ inline void textattr(Colour fg, Colour bg) {
     WORD attrs = static_cast<WORD>(fg) | (static_cast<WORD>(bg) << 4);
     SetConsoleTextAttribute(hConsole, attrs);
 #else
-    int fg_val = static_cast<int>(fg) % 8;
-    int bg_val = static_cast<int>(bg) % 8;
-    // Use a pair number that safely fits within ncurses limits (1-255)
-    // Formula: pair_num = 1 + bg_val * 8 + fg_val (ensures 1 <= pair_num <= 64)
+    int fg_val = detail::to_ncurses_colour(fg);
+    int bg_val = detail::to_ncurses_colour(bg);
+    // Keep pair numbering in a compact 8x8 matrix.
     int pair_num = 1 + bg_val * 8 + fg_val;
-    
-    if (pair_num < 256) {
+
+    if (pair_num > 0 && pair_num < COLOR_PAIRS) {
         init_pair(pair_num, fg_val, bg_val);
         attron(COLOR_PAIR(pair_num));
     }
-    
+
     if (static_cast<int>(fg) >= 8) {
         attron(A_BOLD);
+    } else {
+        attroff(A_BOLD);
     }
     refresh();
 #endif
@@ -477,9 +533,18 @@ inline void vprintf_impl(const char* format, va_list args) {
 #ifdef _WIN32
     vprintf(format, args);
 #else
-    char buffer[4096];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    printw("%s", buffer);
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int needed = vsnprintf(nullptr, 0, format, args_copy);
+    va_end(args_copy);
+
+    if (needed < 0) {
+        return;
+    }
+
+    std::string buffer(static_cast<size_t>(needed) + 1, '\0');
+    vsnprintf(&buffer[0], buffer.size(), format, args);
+    printw("%s", buffer.c_str());
     refresh();
 #endif
 }

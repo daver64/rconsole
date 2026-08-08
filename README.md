@@ -10,7 +10,7 @@ A modern, header-only C++ library for cross-platform console I/O operations. Pro
 - **Rich functionality**:
   - Cursor positioning (`gotoxy`)
   - Text output with positioning (`printf`, `putch`)
-  - Unicode support (UTF-8 strings, wide characters with `putwch`, `wprintf`, `getwchar`)
+  - Unicode support (UTF-8 strings, wide characters with `putwch`, `wputs`, `getwchar`)
   - Colour support (16 colours: black, blue, green, cyan, red, magenta, yellow, white + bright variants)
   - Character input (`getchar`, `getcharecho`, `kbhit`)
   - Screen manipulation (`clrscr`, `getwidth`, `getheight`)
@@ -295,22 +295,22 @@ void conio::putwch(int x, int y, wchar_t wc, Colour fg, Colour bg)
 Outputs a wide character at specified position with foreground and background colours.
 
 ```cpp
-void conio::wprintf(const wchar_t* wstr)
+void conio::wputs(const wchar_t* wstr)
 ```
 Outputs a wide character string (Unicode) at current cursor position.
 
 ```cpp
-void conio::wprintf(int x, int y, const wchar_t* wstr)
+void conio::wputs(int x, int y, const wchar_t* wstr)
 ```
 Outputs a wide character string at specified position.
 
 ```cpp
-void conio::wprintf(int x, int y, Colour fg, const wchar_t* wstr)
+void conio::wputs(int x, int y, Colour fg, const wchar_t* wstr)
 ```
 Outputs a wide character string at specified position with foreground colour.
 
 ```cpp
-void conio::wprintf(int x, int y, Colour fg, Colour bg, const wchar_t* wstr)
+void conio::wputs(int x, int y, Colour fg, Colour bg, const wchar_t* wstr)
 ```
 Outputs a wide character string at specified position with foreground and background colours.
 
@@ -398,6 +398,21 @@ The Unicode example demonstrates:
 - Greek letters
 - Multiple language support (English, Spanish, French, German, Russian, Japanese, Chinese, Korean, Arabic)
 - Unicode progress bars
+
+## Validation Checklist
+
+Build and run a quick color-mapping regression target:
+
+```bash
+g++ -std=c++11 -I include tests/colour_mapping_test.cpp -o colour_mapping_test -lncursesw
+./colour_mapping_test
+```
+
+Manual verification checklist:
+- Run `example` and verify all named colours match labels (especially blue/cyan/red/yellow).
+- Call `textcolour(BRIGHT_*)`, then `textattr(non-bright, BLACK)` and verify non-bright text is not bold.
+- Set a non-white foreground, then call `textbackground(...)` and verify the foreground remains unchanged.
+- Run `example_unicode` and verify mixed Unicode text and symbols render without mojibake.
 
 ## License
 
