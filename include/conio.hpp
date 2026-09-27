@@ -7,6 +7,7 @@
 #include <memory>
 #include <clocale>
 #include <mutex>
+#include <vector>
 
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
@@ -636,6 +637,242 @@ inline void showcursor(bool visible) {
     curs_set(visible ? 1 : 0);
 #endif
 }
+
+class Window {
+private:
+    int x;
+    int y;
+    int width;
+    int height;
+    Colour foreground;
+    Colour background;
+    bool bordered;
+    std::string title;
+#ifndef _WIN32
+    WINDOW* native_window;
+#endif
+
+    void draw_border() {
+        if (!bordered) {
+            return;
+        }
+#ifdef _WIN32
+        for (int column = 0; column < width; ++column) {
+            putch(x + column, y, '-');
+            putch(x + column, y + height - 1, '-');
+        }
+        for (int row = 1; row < height - 1; ++row) {
+            putch(x, y + row, '|');
+            putch(x + width - 1, y + row, '|');
+        }
+        putch(x, y, '+');
+        putch(x + width - 1, y, '+');
+        putch(x, y + height - 1, '+');
+        putch(x + width - 1, y + height - 1, '+');
+#else
+        box(native_window, 0, 0);
+#endif
+    }
+
+public:
+    Window(int window_x, int window_y, int window_width, int window_height,
+           Colour window_foreground = Colour::WHITE,
+           Colour window_background = Colour::BLACK,
+           bool window_bordered = true,
+           const std::string& window_title = std::string())
+        : x(window_x), y(window_y), width(window_width), height(window_height),
+          foreground(window_foreground), background(window_background),
+          bordered(window_bordered), title(window_title)
+#ifndef _WIN32
+          , native_window(nullptr)
+#endif
+    {
+        if (width < 2) width = 2;
+        if (height < 2) height = 2;
+#ifndef _WIN32
+        native_window = newwin(height, width, y, x);
+#endif
+    }
+
+    ~Window() {
+#ifndef _WIN32
+        if (native_window != nullptr) {
+            delwin(native_window);
+        }
+#endif
+    }
+
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
+
+    void clear() {
+#ifdef _WIN32
+        textattr(foreground, background);
+        for (int row = 0; row < height; ++row) {
+            for (int column = 0; column < width; ++column) {
+                putch(x + column, y + row, ' ');
+            }
+        }
+#else
+        int pair = 1 + detail::to_ncurses_colour(background) * 8 +
+                   detail::to_ncurses_colour(foreground);
+        if (pair > 0 && pair < COLOR_PAIRS) {
+            init_pair(pair, detail::to_ncurses_colour(foreground),
+                      detail::to_ncurses_colour(background));
+            wbkgd(native_window, COLOR_PAIR(pair));
+        }
+        werase(native_window);
+#endif
+    }
+
+    void draw() {
+        clear();
+#ifdef _WIN32
+        textattr(foreground, background);
+#else
+        int pair = 1 + detail::to_ncurses_colour(background) * 8 +
+                   detail::to_ncurses_colour(foreground);
+        if (pair > 0 && pair < COLOR_PAIRS) {
+            wattron(native_window, COLOR_PAIR(pair));
+        }
+#endif
+        draw_border();
+        if (!title.empty() && width > 4) {
+            print(2, 0, title.c_str());
+        }
+#ifdef _WIN32
+        gotoxy(x, y);
+#else
+        wrefresh(native_window);
+#endif
+    }
+
+    void print(int relative_x, int relative_y, const char* text) {
+        if (text == nullptr || relative_x < 0 || relative_y < 0 ||
+            relative_x >= width || relative_y >= height) {
+            return;
+        }
+#ifdef _WIN32
+        textattr(foreground, background);
+        gotoxy(x + relative_x, y + relative_y);
+        for (int index = 0; text[index] != '\0' && relative_x + index < width; ++index) {
+            putch(text[index]);
+        }
+#else
+        mvwaddnstr(native_window, relative_y, relative_x, text,
+                   width - relative_x);
+        wrefresh(native_window);
+#endif
+    }
+
+    void print(int relative_x, int relative_y, Colour text_foreground,
+               Colour text_background, const char* text) {
+        if (text == nullptr || relative_x < 0 || relative_y < 0 ||
+            relative_x >= width || relative_y >= height) {
+            return;
+        }
+#ifdef _WIN32
+        textattr(text_foreground, text_background);
+        gotoxy(x + relative_x, y + relative_y);
+        for (int index = 0; text[index] != '\0' && relative_x + index < width; ++index) {
+            putch(text[index]);
+        }
+#else
+        int foreground_value = detail::to_ncurses_colour(text_foreground);
+        int background_value = detail::to_ncurses_colour(text_background);
+        int pair = 1 + background_value * 8 + foreground_value;
+        if (pair > 0 && pair < COLOR_PAIRS) {
+            init_pair(pair, foreground_value, background_value);
+            wattron(native_window, COLOR_PAIR(pair));
+        }
+        mvwaddnstr(native_window, relative_y, relative_x, text,
+                   width - relative_x);
+        wattroff(native_window, COLOR_PAIR(pair));
+        wrefresh(native_window);
+#endif
+    }
+
+    int get_x() const { return x; }
+    int get_y() const { return y; }
+    int get_width() const { return width; }
+    int get_height() const { return height; }
+};
+
+class Menu {
+private:
+    Window window;
+    std::vector<std::string> items;
+    Colour selected_foreground;
+    Colour selected_background;
+    int selected;
+
+    void draw_items() {
+        window.draw();
+        for (size_t index = 0; index < items.size(); ++index) {
+            int row = static_cast<int>(index) + 1;
+            if (row >= window.get_height() - 1) {
+                break;
+            }
+#ifdef _WIN32
+            window.print(2, row,
+                         index == static_cast<size_t>(selected) ? selected_foreground : Colour::WHITE,
+                         index == static_cast<size_t>(selected) ? selected_background : Colour::BLACK,
+                         items[index].c_str());
+#else
+            window.print(2, row,
+                         index == static_cast<size_t>(selected) ? selected_foreground : Colour::WHITE,
+                         index == static_cast<size_t>(selected) ? selected_background : Colour::BLACK,
+                         items[index].c_str());
+#endif
+        }
+    }
+
+public:
+    Menu(int menu_x, int menu_y, int menu_width, const std::vector<std::string>& menu_items,
+         Colour menu_foreground = Colour::WHITE,
+         Colour menu_background = Colour::BLACK,
+         Colour menu_selected_foreground = Colour::BLACK,
+         Colour menu_selected_background = Colour::WHITE)
+        : window(menu_x, menu_y, menu_width,
+                 static_cast<int>(menu_items.size()) + 3,
+                 menu_foreground, menu_background),
+          items(menu_items), selected_foreground(menu_selected_foreground),
+          selected_background(menu_selected_background), selected(0) {}
+
+    void draw() { draw_items(); }
+
+    int run() {
+        if (items.empty()) {
+            return -1;
+        }
+        draw_items();
+        for (;;) {
+#ifdef _WIN32
+            int key = getchar();
+            if (key == 0 || key == 224) {
+                key = getchar();
+                if (key == 72) --selected;
+                if (key == 80) ++selected;
+            } else if (key == 13) {
+                return selected;
+            } else if (key == 27) {
+                return -1;
+            }
+#else
+            int key = wgetch(stdscr);
+            if (key == KEY_UP) --selected;
+            else if (key == KEY_DOWN) ++selected;
+            else if (key == '\n' || key == KEY_ENTER) return selected;
+            else if (key == 27) return -1;
+#endif
+            if (selected < 0) selected = static_cast<int>(items.size()) - 1;
+            if (selected >= static_cast<int>(items.size())) selected = 0;
+            draw_items();
+        }
+    }
+
+    int selected_index() const { return selected; }
+};
 
 } // namespace conio
 

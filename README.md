@@ -15,6 +15,8 @@ A modern, header-only C++ library for cross-platform console I/O operations. Pro
   - Character input (`getchar`, `getcharecho`, `kbhit`)
   - Screen manipulation (`clrscr`, `getwidth`, `getheight`)
   - Cursor visibility control (`showcursor`)
+  - Text-mode windows with borders and titles (`Window`)
+  - Keyboard-driven vertical menus (`Menu`)
 
 ## Requirements
 
@@ -71,6 +73,26 @@ int main() {
     return 0;
 }
 ```
+
+### Windows and Menus
+
+`Window` provides a bordered region with relative drawing coordinates. `Menu`
+uses the same coordinate system and supports Up, Down, Enter, and Escape on
+both Linux and Windows.
+
+```cpp
+std::vector<std::string> items = {"Open", "Save", "Quit"};
+
+conio::Window panel(2, 1, 40, 6, conio::Colour::BRIGHT_WHITE,
+                    conio::Colour::BLUE, true, "FILE");
+panel.draw();
+panel.print(2, 2, "Ready.");
+
+conio::Menu menu(2, 8, 24, items);
+int selected = menu.run();       // item index, or -1 for Escape
+```
+
+The complete interactive example is in `example_windows_menus.cpp`.
 
 ## Building
 
@@ -374,6 +396,10 @@ g++ -std=c++11 -I include example.cpp -o example -lncurses
 g++ -std=c++11 -I include example_unicode.cpp -o example_unicode -lncursesw
 ./example_unicode
 
+# Linux - Windows and menus example
+g++ -std=c++11 -I include example_windows_menus.cpp -o example_windows_menus -lncursesw
+./example_windows_menus
+
 # Windows - Basic example
 cl /EHsc /I include example.cpp
 example.exe
@@ -381,6 +407,10 @@ example.exe
 # Windows - Unicode example
 cl /EHsc /I include example_unicode.cpp
 example_unicode.exe
+
+# Windows - Windows and menus example
+cl /EHsc /I include example_windows_menus.cpp
+example_windows_menus.exe
 ```
 
 The basic example demonstrates:
