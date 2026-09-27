@@ -207,6 +207,10 @@ inline void clrscr() {
     FillConsoleOutputAttribute(hConsole, csbi.wAttributes, cellCount, homeCoord, &count);
     SetConsoleCursorPosition(hConsole, homeCoord);
 #else
+    attr_t attrs = 0;
+    short pair = 0;
+    attr_get(&attrs, &pair, nullptr);
+    wbkgd(stdscr, pair > 0 ? COLOR_PAIR(pair) : 0);
     clear();
     refresh();
 #endif
