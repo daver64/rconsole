@@ -136,29 +136,24 @@ cl /EHsc /std:c++14 /I include example_unicode.cpp
 
 ### Building with Make or CMake
 
-Create a simple Makefile:
-```makefile
-CXX = g++
-CXXFLAGS = -std=c++11 -I include
-LDFLAGS = -lncursesw
-
-.PHONY: all clean
-
-all: example example_unicode
-
-example: example.cpp include/conio.hpp
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
-
-example_unicode: example_unicode.cpp include/conio.hpp
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
-
-clean:
-	rm -f example example_unicode
-```
-
-Then build with:
+The repository includes a Makefile. Build the examples with:
 ```bash
 make
+```
+
+Install the header to the default system prefix:
+```bash
+sudo make install
+```
+
+Install to a user-owned prefix without `sudo`:
+```bash
+make install PREFIX="$HOME/opt"
+```
+
+This installs the header as `$HOME/opt/include/conio.hpp`. Remove it with:
+```bash
+make uninstall PREFIX="$HOME/opt"
 ```
 
 Using MinGW:

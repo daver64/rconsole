@@ -15,6 +15,12 @@ dist/
 *.out
 *.app
 example
+example_unicode
+example_windows_menus
+test_example
+test_example_c14
+test_unicode
+test_unicode_c14
 a.out
 test_*
 # Precompiled Headers
